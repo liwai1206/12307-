@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.IOrderItemDao">
+    <select id="findSeatNumber" parameterType="int" resultType="String">
+        select seatnumber from orderitems where operateid = #{oid}
+    </select>
+
+    <insert id="adds" parameterType="map">
+        insert into orderitems(operateid,uid,identify,buytime,name,money,type,seattype,seatnumber,status)
+		values(#{oid},#{uid},#{cardNumber},now(),#{name},#{price},#{ticketType},#{siteType},#{seat},0)
+    </insert>
+
+    <select id="total" resultType="int">
+        select count( oid ) from orderitems
+    </select>
+
+    <select id="findByPage" resultType="MyOrders" parameterType="map">
+        select ods.oid, tn.tname,s1.sname startsite,s2.sname endsite,date_format( date,"%Y-%m-%d") date,
+		date_format(starttime,'%H:%i') starttime , ods.seattype,ods.type,ods.buytime,ods.money,ods.status  from
+		orderitems ods, operate op ,site s1,site s2 , train_number tn , train_type t where ods.operateid=op.oid
+		and op.tid=tn.tid and tn.typeid=t.tid and tn.startsite=s1.sid and tn.endsite=s2.sid order by buytime limit #{page},#{rows}
+    </select>
+
+    <insert id="add" parameterType="RefundTicket">
+        insert into refund_ticket(operateid,oid,uid,identify,name,refundtime,money,status)
+         values(#{operateid},#{oid},#{uid},#{identify},#{name},now(),#{money},2)
+    </insert>
+
+    <select id="findById" parameterType="int" resultType="OrderItem">
+        select operateid,uid,identify,name,money,seattype from orderitems where oid = #{oid}
+    </select>
+
+    <delete id="delete" parameterType="int">
+        delete from orderitems where oid = #{oid}
+    </delete>
+
+    <insert id="addSeat" parameterType="map">
+        update operate set
+        <if test="seattype == '软卧'">
+            rworemain = rworemain + 1
+        </if>
+        <if test="seattype == '软座'">
+            rzuoremain = rzuoremain + 1
+        </if>
+        <if test="seattype == '硬卧'">
+            yworemain = yworemain + 1
+        </if>
+        <if test="seattype == '硬座'">
+            yzuoremain = yzuoremain + 1
+        </if>
+        <if test="seattype == '站票'">
+            zhanremain = zhanremain + 1
+        </if>
+        where oid = #{operateid}
+    </insert>
+
+    <update id="updateState" parameterType="string">
+        update orderitems set status = 2 where oid = #{oid}
+    </update>
+
+    <select id="lhyfindByPage" parameterType="map" resultType="OrderItem">
+        select o.oid, tn.tname tname, o.uid, u.uname uname, buytime, name, o.status from orderitems o
+		inner join operate op on o.operateid=op.oid inner join users u on u.uid=o.uid inner join
+		train_number tn on op.tid=tn.tid order by o.oid limit #{page},#{rows}
+    </select>
+
+    <select id="lhytotal" resultType="int" parameterType="boolean">
+        select count(oid) from orderitems
+        <if test="flag==false">
+            where status != 0
+        </if>
+    </select>
+
+    <select id="lhyfindByCondition" parameterType="map" resultType="OrderItem">
+        select o.oid, tn.tname tname, o.uid, u.uname uname, buytime, name, o.status from orderitems o
+		inner join operate op on o.operateid=op.oid inner join users u on u.uid=o.uid inner join
+		train_number tn on op.tid=tn.tid
+		<where>
+            <if test="tid!=null and tid != ''">
+                and op.tid=#{tid}
+            </if>
+            <if test="uname!=null and uname != ''">
+                and u.uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="buytime!=null and buytime != ''">
+                and SUBSTRING_INDEX(buytime, ' ', 1)=#{buytime}
+            </if>
+            <if test="name!=null and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="status!=null and status != ''">
+                and o.status=#{status}
+            </if>
+        </where>
+        order by oid limit #{page},#{rows}
+    </select>
+
+    <select id="lhytotals" resultType="int" parameterType="map">
+        select count(o.oid) from orderitems o
+		inner join operate op on o.operateid=op.oid inner join users u on u.uid=o.uid inner join
+		train_number tn on op.tid=tn.tid
+        <where>
+            <if test="tid!=null and tid != ''">
+                and op.tid=#{tid}
+            </if>
+            <if test="uname!=null and uname != ''">
+                and u.uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="buytime!=null and buytime != ''">
+                and SUBSTRING_INDEX(buytime, ' ', 1)=#{buytime}
+            </if>
+            <if test="name!=null and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="status!=null and status != ''">
+                and o.status=#{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="lhyfindByOid" parameterType="string" resultType="OrderItem">
+        select o.oid, tn.tname tname, o.uid, identify, type, seattype, seatnumber, money, u.uname uname, buytime, name, o.status
+		from orderitems o inner join operate op on o.operateid=op.oid inner join users u on u.uid=o.uid inner join
+		train_number tn on op.tid=tn.tid where o.oid=#{oid}
+    </select>
+
+    <select id="lhysumByTid" resultType="map">
+        select ord.operateid, tn.tname, sum(money) sum from orderitems ord inner join operate op ON
+		op.oid=ord.operateid inner join train_number tn on tn.tid=op.tid GROUP BY ord.operateid
+    </select>
+
+    <select id="lhysumByYear" resultType="map" parameterType="string">
+        select tn.tid, SUBSTRING_INDEX(buytime, '-', 1) year, tn.tname, sum(money) sum from orderitems ord inner join operate op on ord.operateid=op.oid
+		inner join train_number tn on op.tid=tn.tid where SUBSTRING_INDEX(buytime, '-', 1)=#{year} GROUP BY tn.tid
+    </select>
+
+    <select id="lhysumByMonth" parameterType="map" resultType="map">
+        select tn.tid, SUBSTRING_INDEX(buytime, '-', 2) month, tn.tname, sum(money) sum from orderitems ord inner join operate op on ord.operateid=op.oid
+		inner join train_number tn on op.tid=tn.tid where SUBSTRING_INDEX(buytime, '-', 2)=#{dyear} GROUP BY tn.tid
+    </select>
+
+    <select id="lhysumByDate" resultType="map" parameterType="string">
+        select tn.tid, SUBSTRING_INDEX(buytime, ' ', 1) date, tn.tname, sum(money) sum from orderitems ord inner join operate op on ord.operateid=op.oid
+		inner join train_number tn on op.tid=tn.tid where SUBSTRING_INDEX(buytime, ' ', 1)=#{date} GROUP BY tn.tid
+    </select>
+
+    <select id="exportExcelData" resultType="java.util.Map">
+        select tn.tname as '车次名称', SUM(ods.money) as '营业总额' from orderitems ods, operate op ,train_number tn
+        where ods.operateid=op.oid and op.tid=tn.tid group by ods.operateid
+    </select>
+</mapper>

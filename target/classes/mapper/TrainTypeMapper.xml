@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.ITrainTypeDao">
+    <select id="findAll" resultType="TrainType">
+        select tid ,tname from train_type
+    </select>
+
+    <insert id="lhyadd" parameterType="string">
+        insert into train_type values(0, #{tname})
+    </insert>
+
+    <select id="lhytotal" resultType="int">
+        select count(tid) from train_type
+    </select>
+
+    <select id="lhyfindByPage" resultType="TrainType" parameterType="map">
+        select tid, tname from train_type order by tid limit #{page},#{rows}
+    </select>
+
+    <select id="lhyfinds" resultType="TrainType">
+        select tid, tname from train_type
+    </select>
+</mapper>

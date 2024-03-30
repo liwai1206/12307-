@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.ITrainNumberDao">
+    <insert id="lhyadd" parameterType="map">
+        insert into train_number values(0, #{tname}, #{typeid}, #{startsite}, #{endsite}, #{duration}, #{rwo}, #{rwoprice}, #{rzuo}, #{rzuoprice}, #{ywo}, #{ywoprice}, #{yzuo}, #{yzuoprice}, #{zhan}, #{zhanprice}, #{wostudentprice}, #{zuostudentprice}, #{status})
+    </insert>
+
+    <update id="lhyupdate" parameterType="map">
+        update train_number set tname=#{tname}, typeid=#{typeid}, startsite=#{startsite}, endsite=#{endsite}, duration=#{duration}, rwo=#{rwo},
+		rwoprice=#{rwoprice}, rzuo=#{rzuo}, rzuoprice=#{rzuoprice}, ywo=#{ywo}, ywoprice=#{ywoprice}, yzuo=#{yzuo}, yzuoprice=#{yzuoprice}, zhan=#{zhan}, zhanprice=#{zhanprice}, wostudentprice=#{wostudentprice},
+		zuostudentprice=#{zuostudentprice} where tid=#{tid}
+    </update>
+
+    <update id="lhyupdateStatus" parameterType="map">
+        update train_number set status=
+        <if test="status==1">
+            0
+        </if>
+        <if test="status==0">
+            1
+        </if>
+        where tid=#{tid}
+    </update>
+
+    <select id="lhytotal" resultType="int">
+        select count(tid) from train_number
+    </select>
+
+    <select id="lhyfindByPage" resultType="TrainNumber" parameterType="map">
+        select tn.tid, tn.tname, tn.typeid, tt.tname typename, tn.startsite, tn.endsite, s.sname startname, s2.sname endname, tn.status
+		from train_number tn INNER JOIN train_type tt on tn.typeid=tt.tid
+		INNER JOIN site s on tn.startsite=s.sid INNER JOIN site s2 on s2.sid=tn.endsite order by tn.tid limit #{page},#{rows}
+    </select>
+
+    <select id="lhytotals" parameterType="map" resultType="int">
+        select count(tid) from train_number
+        <where>
+            <if test="tname!=null and tname!=''">
+                and tname like concat('%', #{tname}, '%')
+            </if>
+            <if test="typeid!=null and typeid!=''">
+                and typeid=#{typeid}
+            </if>
+            <if test="startsite!=null and startsite!=''">
+                and startsite=#{startsite}
+            </if>
+            <if test="endsite!=null and endsite!=''">
+                and endsite=#{endsite}
+            </if>
+        </where>
+    </select>
+
+    <select id="lhyfindByCondition" resultType="TrainNumber" parameterType="map">
+        select tn.tid, tn.tname, tn.typeid, tt.tname typename, tn.startsite, tn.endsite, s.sname startname, s2.sname endname, tn.status
+		from train_number tn INNER JOIN train_type tt on tn.typeid=tt.tid
+		INNER JOIN site s on tn.startsite=s.sid INNER JOIN site s2 on s2.sid=tn.endsite
+        <where>
+            <if test="tname!=null and tname!=''">
+                and tname like concat('%', #{tname}, '%')
+            </if>
+            <if test="typeid!=null and typeid!=''">
+                and typeid=#{typeid}
+            </if>
+            <if test="startsite!=null and startsite!=''">
+                and startsite=#{startsite}
+            </if>
+            <if test="endsite!=null and endsite!=''">
+                and endsite=#{endsite}
+            </if>
+        </where>
+        order by tid limit #{page} , #{rows}
+    </select>
+
+    <select id="lhyfindByTid" parameterType="string" resultType="TrainNumber">
+        select tn.tid, tn.tname, tn.typeid, tt.tname typename, tn.startsite startname, tn.endsite endname, tn.duration, tn.rwo, tn.rwoprice,
+		tn.rzuo, tn.rzuoprice, tn.ywo, tn.ywoprice, tn.yzuo, tn.yzuoprice, tn.zhan, tn.zhanprice, tn.wostudentprice, tn.zuostudentprice, tn.status from train_number tn
+		INNER JOIN train_type tt on tn.typeid=tt.tid
+		INNER JOIN site s on tn.startsite=s.sid INNER JOIN site s2 on s2.sid=tn.endsite where tn.tid=#{tid}
+    </select>
+</mapper>

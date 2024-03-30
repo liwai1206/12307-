@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.IUsersDao">
+    <insert id="register" parameterType="users">
+        insert into users values(null,#{uname},#{upassword},'images/man.png',#{utel},#{uidentify},#{uemail},0)
+    </insert>
+
+    <select id="login" parameterType="map" resultType="users">
+        select uid,uname,upic,utel,uemail,uidentify,status from users where ( utel=#{account} or uidentify=#{account} or uemail=#{account})
+         and upassword=#{upassword} and status != 0
+    </select>
+
+    <update id="active" parameterType="string">
+        update users set status = 1 where uidentify = #{identify}
+    </update>
+
+    <select id="findByEmail" resultType="users" parameterType="string">
+        select upassword from users where uemail = #{email} and status != 0
+    </select>
+
+    <update id="update" parameterType="users">
+        update users set uname = #{uname},utel=#{utel},uidentify=#{uidentify},uemail=#{uemail} where uid = #{uid}
+    </update>
+
+    <select id="lhytotal" resultType="int">
+        select count(uid) from users
+    </select>
+
+    <select id="lhyfindByPage" resultType="users" parameterType="map">
+        select uid, uname, upic, utel, uidentify, uemail, status from users order by uid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhyfindByCondition" parameterType="map" resultType="users">
+        select uid, uname, upic, utel, uidentify, uemail, status from users
+        <where>
+            <if test="uname != null and uname != '' ">
+                and uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="utel != null and utel != '' ">
+                and utel= #{utel}
+            </if>
+            <if test="status != null and status != '' ">
+                and status= #{status}
+            </if>
+        </where>
+        order by uid limit #{page},#{rows}
+    </select>
+
+    <select id="lhytotals" resultType="int" parameterType="map">
+        select count(uid) from users
+        <where>
+            <if test="uname != null and uname != '' ">
+                and uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="utel != null and utel != '' ">
+                and utel= #{utel}
+            </if>
+            <if test="status != null and status != '' ">
+                and status= #{status}
+            </if>
+        </where>
+    </select>
+
+    <update id="lhyupdateStatus" parameterType="map">
+        update users set status=
+        <if test="status==1">
+            0
+        </if>
+        <if test="status==0">
+            1
+        </if>
+        where uid= #{uid}
+    </update>
+
+    <select id="lhyfindByUid" parameterType="string" resultType="users">
+        select uid, uname, upic, utel, uidentify, uemail, status from users where uid=#{uid}
+    </select>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.IAdminDao">
+    <select id="login" resultType="Admin" parameterType="map">
+        select aid,aname,aemail,status from admin where aemail = #{account} and apassword = #{apassword}
+        and status != 0
+    </select>
+
+    <insert id="lhyadd" parameterType="map">
+        insert into admin values(0, #{aname},#{apassword}, #{aemail}, #{status})
+    </insert>
+
+    <select id="lhyfindByPage" resultType="Admin" parameterType="map">
+        select aid, aname, apassword, aemail, status from admin order by aid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhytotal" resultType="int">
+        select count(aid) from admin
+    </select>
+
+    <select id="lhyfindByAid" resultType="Admin" parameterType="string">
+        select aid, aname, apassword, aemail, status from admin where aid=#{aid}
+    </select>
+
+    <select id="lhyfindByCondition" parameterType="map" resultType="Admin">
+        select aid, aname, apassword, aemail, status from admin
+        <where>
+            <if test="aname != null and aname != '' ">
+                and aname like concat('%', #{aname}, '%')
+            </if>
+            <if test="aemail != null and aemail != '' ">
+                and aemail= #{aemail}
+            </if>
+            <if test="status != null and status != '' ">
+                and status= #{status}
+            </if>
+        </where>
+        order by aid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhytotals" resultType="int" parameterType="map">
+        select count(aid) from admin
+        <where>
+            <if test="aname != null and aname != '' ">
+                and aname like concat('%', #{aname}, '%')
+            </if>
+            <if test="aemail != null and aemail != '' ">
+                and aemail= #{aemail}
+            </if>
+            <if test="status != null and status != '' ">
+                and status= #{status}
+            </if>
+        </where>
+    </select>
+
+    <update id="lhyupdateStatus" parameterType="string">
+        update admin set status=1 where aid= #{aid}
+    </update>
+
+    <select id="lhysortByStatus" parameterType="map" resultType="Admin">
+        select aid, aname, apassword, aemail, status from admin order by status limit #{page}, #{rows}
+    </select>
+</mapper>

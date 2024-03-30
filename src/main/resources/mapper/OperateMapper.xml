@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.IOperateDao">
+    <select id="total" resultType="int" parameterType="map">
+        select count(oid) from operate op ,site s1,site s2 , train_number tn ,
+			train_type t where op.tid=tn.tid and tn.typeid=t.tid and
+			tn.startsite=s1.sid and tn.endsite=s2.sid
+
+            <if test=" tid!= null and tid != '' ">
+                and t.tid = #{tid}
+            </if>
+            <if test=" startsite!= null and startsite != '' ">
+                and s1.sname like concat('%',#{startsite},'%')
+            </if>
+            <if test=" endsite!= null and endsite != '' ">
+                and s2.sname like concat('%',#{endsite},'%')
+            </if>
+            <if test=" date!= null and date != '' ">
+                and date_format( date,'%Y-%m-%d') like concat('%',#{date},'%')
+            </if>
+        and date_format( date,'%Y-%m-%d') between #{startdate} and  #{enddate}
+    </select>
+
+    <select id="findByType" parameterType="map" resultType="Operate">
+        select oid, tn.tname,s1.sname startsite,s2.sname endsite, date_format(date,'%Y-%m-%d') date,
+			date_format(starttime,'%H:%i') starttime,date_format(endtime,'%H:%i') endtime,tn.duration,
+			rworemain,yworemain,rzuoremain,yzuoremain,zhanremain , op.status from operate op ,site s1,site s2 ,
+			train_number tn , train_type t where op.tid=tn.tid and tn.typeid=t.tid and tn.startsite=s1.sid
+			and tn.endsite=s2.sid
+            <if test=" tid!= null and tid != '' ">
+                and t.tid = #{tid}
+            </if>
+            <if test=" startsite!= null and startsite != '' ">
+                and s1.sname like concat('%',#{startsite},'%')
+            </if>
+            <if test=" endsite!= null and endsite != '' ">
+                and s2.sname like concat('%',#{endsite},'%')
+            </if>
+            <if test=" date!= null and date != '' ">
+                and date_format( date,'%Y-%m-%d') like concat('%',#{date},'%')
+            </if>
+        and date_format( date,'%Y-%m-%d') between #{startdate} and #{enddate} order by date limit #{page},#{rows}
+    </select>
+
+    <select id="totalPrice" resultType="double" parameterType="map">
+        select
+        <if test="ticketType=='成人票'">
+            <if test="siteType=='软卧'">
+                rwoprice
+            </if>
+            <if test="siteType=='软座'">
+                rzuoprice
+            </if>
+            <if test="siteType=='硬卧'">
+                ywoprice
+            </if>
+            <if test="siteType=='硬座'">
+                yzuoprice
+            </if>
+            <if test="siteType=='站票'">
+                zhanprice
+            </if>
+        </if>
+        <if test="ticketType=='学生票'">
+            <if test="siteType=='软卧' || siteType=='硬卧'">
+                wostudentprice
+            </if>
+            <if test="siteType=='软座' || siteType=='硬座'">
+                zuostudentprice
+            </if>
+            <if test="siteType=='站票' ">
+                zhanprice
+            </if>
+        </if>
+
+         from operate op join train_number tn on op.tid = tn.tid where oid = #{oid}
+    </select>
+
+    <select id="findRemain" parameterType="map" resultType="int">
+        select
+         <if test="siteType=='软卧'">
+             rworemain
+         </if>
+        <if test="siteType=='软座'">
+            rzuoremain
+        </if>
+        <if test="siteType=='硬卧'">
+            yworemain
+        </if>
+        <if test="siteType=='硬座'">
+            yzuoremain
+        </if>
+        <if test="siteType=='站票'">
+            zhanremain
+        </if>
+         from operate op where oid = #{oid}
+    </select>
+
+    <update id="subSeat" parameterType="map">
+        update operate set
+        <if test="siteType=='软卧'">
+            rworemain =rworemain -1
+        </if>
+        <if test="siteType=='软座'">
+            rzuoremain=rzuoremain -1
+        </if>
+        <if test="siteType=='硬卧'">
+            yworemain=yworemain -1
+        </if>
+        <if test="siteType=='硬座'">
+            yzuoremain=yzuoremain -1
+        </if>
+        <if test="siteType=='站票'">
+            zhanremain=zhanremain -1
+        </if>
+         where oid = #{oid}
+    </update>
+
+    <insert id="lhyadd" parameterType="Operate">
+        insert into operate values(0, #{tid},#{rworemain}, #{yworemain}, #{rzuoremain}, #{yzuoremain}, #{zhanremain},#{date}, #{starttime}, #{endtime}, 1)
+    </insert>
+
+    <update id="lhyupdateRemain" parameterType="Operate">
+        update operate set
+        <if test=" type == 'rworemain' ">
+            rworemain
+        </if>
+        <if test=" type == 'yworemain' ">
+            rworemain
+        </if>
+        <if test=" type == 'rzuoremain' ">
+            rworemain
+        </if>
+        <if test=" type == 'yzuoremain' ">
+            rworemain
+        </if>
+        <if test=" type == 'zhanremain' ">
+            rworemain
+        </if>
+        = #{remain} where tid = #{tid}
+
+    </update>
+
+    <update id="lhyupdateStatus" parameterType="map">
+        update operate set status =
+        <if test="status==0">
+            1
+        </if>
+        <if test="status==1">
+            0
+        </if>
+        where oid = #{oid}
+    </update>
+
+    <select id="lhytotal" resultType="int" parameterType="boolean">
+        select count(oid) from operate
+        <where>
+            <if test=" !flag ">
+                and status != 0
+            </if>
+        </where>
+    </select>
+
+    <select id="lhyfindByPage" resultType="Operate" parameterType="map">
+        select oid, o.tid, tn.tname tname, o.date, starttime, endtime, o.status
+		from operate o inner join train_number tn on o.tid=tn.tid order by oid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhytotals" resultType="int" parameterType="map">
+        select count(oid) from operate
+        <where>
+            <if test="tid!=null and tid != ''">
+                and tid= #{tid}
+            </if>
+            <if test="date!=null and date != ''">
+                and date= #{date}
+            </if>
+            <if test="status!=null and status != ''">
+                and status= #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="lhyfindByCondition" parameterType="map" resultType="Operate">
+        select oid, o.tid, tn.tname tname, date_format(o.date, '%Y-%m-%d') date, starttime, endtime, o.status
+	    from operate o inner join train_number tn on o.tid=tn.tid
+        <where>
+            <if test="tid!=null and tid != ''">
+                and o.tid= #{tid}
+            </if>
+            <if test="date!=null and date != ''">
+                and date= #{date}
+            </if>
+            <if test="status!=null and status != ''">
+                and o.status= #{status}
+            </if>
+        </where>
+        order by o.oid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhyfindByOid" resultType="Operate" parameterType="string">
+        select oid, o.tid, tn.tname tname, date_format(o.date, '%Y-%m-%d') date, starttime, endtime, rworemain, yworemain, rzuoremain,
+		 yzuoremain, zhanremain, o.status from operate o inner join train_number tn on o.tid=tn.tid where oid=#{oid}
+    </select>
+
+    <select id="findByTid" resultType="TrainNumber">
+        select * from train_number where tid = #{tid}
+    </select>
+
+    <update id="lhyupdate" parameterType="map">
+        update operate set rworemain=#{rworemain}, yworemain=#{yworemain}, rzuoremain=#{rzuoremain}, yzuoremain=#{yzuoremain}, zhanremain=#{zhanremain}, date=#{date},
+		starttime=#{starttime}, endtime=#{endtime} where oid=#{oid}
+    </update>
+
+</mapper>

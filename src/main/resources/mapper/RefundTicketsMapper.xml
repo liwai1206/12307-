@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.IRefundTicketsDao">
+    <select id="total" resultType="int">
+        select count( rid ) from refund_ticket
+    </select>
+
+    <select id="findByPage" resultType="MyRefund" parameterType="map">
+        select ods.oid, tn.tname,s1.sname startsite,s2.sname endsite,date_format( date,"%Y-%m-%d") date,
+		date_format(starttime,'%H:%i') starttime , ods.seattype,ods.type,rt.refundtime,ods.money,rt.status  from
+		orderitems ods, operate op ,site s1,site s2 , train_number tn , train_type t,refund_ticket rt where
+		rt.oid = ods.oid and ods.operateid=op.oid and op.tid=tn.tid and tn.typeid=t.tid and tn.startsite=s1.sid
+		and tn.endsite=s2.sid order by buytime limit #{page} ,#{rows}
+    </select>
+
+    <select id="lhyfindByPage" parameterType="map" resultType="RefundTicket">
+        select rid, tn.tname, u.uname, name, refundtime, identify, rt.status from refund_ticket rt inner join
+		operate op on rt.operateid=op.oid inner join train_number tn on op.tid=tn.tid inner join
+		users u on u.uid=rt.uid order by rid limit #{page} ,#{rows}
+    </select>
+
+    <select id="lhytotal" resultType="int" parameterType="boolean">
+        select count(rid) from refund_ticket
+        <where>
+            <if test="flag==false">
+                status != 0
+            </if>
+        </where>
+    </select>
+
+    <select id="lhyfindByCondition" parameterType="map" resultType="RefundTicket">
+        select rid, tn.tname, u.uname, name, refundtime, identify, rt.status from refund_ticket rt inner join
+        operate op on rt.operateid=op.oid inner join train_number tn on op.tid=tn.tid inner join
+        users u on u.uid=rt.uid
+        <where>
+            <if test="tid!=null and tid!=''">
+                and op.tid=#{tid}
+            </if>
+            <if test="uname!=null and uname!=''">
+                and u.uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="name!=null and name!=''">
+                and rt.name like concat('%', #{name}, '%')
+            </if>
+            <if test="refundtime!=null and refundtime!=''">
+                and SUBSTRING_INDEX(refundtime, ' ', 1)=#{refundtime}
+            </if>
+            <if test="status!=null and status!=''">
+                and rt.status=#{status}
+            </if>
+        </where>
+        order by op.oid limit #{page},#{rows}
+    </select>
+
+    <select id="lhytotals" resultType="int" parameterType="map">
+        select count(rid) from refund_ticket rt inner join
+        operate op on rt.operateid=op.oid inner join train_number tn on op.tid=tn.tid inner join
+        users u on u.uid=rt.uid
+        <where>
+            <if test="tid!=null and tid!=''">
+                and op.tid=#{tid}
+            </if>
+            <if test="uname!=null and uname!=''">
+                and u.uname like concat('%', #{uname}, '%')
+            </if>
+            <if test="name!=null and name!=''">
+                and rt.name like concat('%', #{name}, '%')
+            </if>
+            <if test="refundtime!=null and refundtime!=''">
+                and SUBSTRING_INDEX(refundtime, ' ', 1)=#{refundtime}
+            </if>
+            <if test="status!=null and status!=''">
+                and rt.status=#{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="findOid" parameterType="string" resultType="int">
+        select oid from refund_ticket where rid = #{rid}
+    </select>
+
+    <update id="updateStatus" parameterType="map">
+        update orderitems set status = 0 where oid = #{oid}
+    </update>
+
+    <update id="lhyupdateStatu01" parameterType="map">
+        update refund_ticket set status=#{status} where rid= #{rid}
+    </update>
+
+    <update id="lhyupdateStatu02" parameterType="string">
+        update operate INNER JOIN refund_ticket on operate.oid=refund_ticket.oid
+		inner join orderitems on orderitems.oid=refund_ticket.oid SET
+		rworemain= case seattype when '软卧' then rworemain+1 else rworemain end,
+		rzuoremain = case seattype when '软座' then rzuoremain+1 else rzuoremain end,
+		yworemain = case seattype when '硬卧' then yworemain+1 else yworemain end,
+		yzuoremain = case seattype when '硬座' then yzuoremain+1 else yzuoremain end
+		where refund_ticket.rid=#{rid}
+    </update>
+
+    <update id="lhyupdateStatu03" parameterType="string">
+        update orderitems od set od.status = 1 where od.oid in (select rt.oid from refund_ticket rt where rid=#{rid})
+    </update>
+
+
+    <update id="updateStatusRefundStatus" parameterType="map">
+        update refund_ticket set status = 1 where rid=#{rid}
+    </update>
+
+</mapper>

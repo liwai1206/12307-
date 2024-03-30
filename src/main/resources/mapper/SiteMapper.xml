@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xibu.tickets.dao.ISiteDao">
+    <insert id="lhyadd" parameterType="map">
+        insert into site values(0, #{sname}, #{status})
+    </insert>
+
+    <update id="lhyupdateSname" parameterType="map">
+        update site set sname=#{sname} where sid=#{sid}
+    </update>
+
+    <update id="lhyupdateStatus" parameterType="map">
+        update site set status=
+        <if test="status==0">
+            1
+        </if>
+        <if test="status==1">
+            0
+        </if>
+        where sid = #{sid}
+    </update>
+
+    <select id="lhytotal" parameterType="boolean" resultType="int">
+        select count(sid) from site
+        <if test="flag==false">
+            where status != 0
+        </if>
+    </select>
+
+    <select id="lhyfindByPage" parameterType="map" resultType="Site">
+        select sid, sname, status from site order by sid limit #{page}, #{rows}
+    </select>
+
+    <select id="lhyfinds" resultType="Site">
+        select sid, sname, status from site where status != 0
+    </select>
+</mapper>
